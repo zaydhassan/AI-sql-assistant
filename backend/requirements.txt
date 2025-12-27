@@ -8,3 +8,6 @@ python-multipart
 google-generativeai
 pydantic
 python-dotenv
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
