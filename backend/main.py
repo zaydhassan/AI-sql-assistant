@@ -23,8 +23,12 @@ import pandas as pd
 import numpy as np
 import uuid
 import json
+from db import Base, engine
+import models
 
 app = FastAPI(title="AI SQL Assistant Backend")
+
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
