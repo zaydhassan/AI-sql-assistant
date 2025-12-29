@@ -3,25 +3,25 @@
 import React, { useState } from "react";
 import ChartRenderer from "./ChartRenderer";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+
 type Props = {
   datasetId: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
-
 export default function AskPanel({ datasetId }: Props) {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleAsk(e?: React.FormEvent) {
-    e?.preventDefault();
-    if (!question.trim() || loading) return;
+  async function handleAsk(q?: string) {
+    const finalQuestion = q ?? question;
+    if (!finalQuestion.trim()) return;
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("You are not logged in. Please login again.");
+      setError("You are not logged in.");
       return;
     }
 
@@ -36,102 +36,124 @@ export default function AskPanel({ datasetId }: Props) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ question }),
+          body: JSON.stringify({ question: finalQuestion }),
         }
       );
 
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : null;
-
+      const data = await res.json();
       if (!res.ok) {
-        setError(data?.detail || "Failed to process query");
+        setError(data?.detail || "Query failed");
       } else {
         setAnswer(data);
+        setQuestion("");
       }
     } catch {
-      setError("Backend not reachable. Is it running?");
+      setError("Backend not reachable");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="ask-card glass glow fade-in">
-      <form onSubmit={handleAsk} className="ask-bar">
-        <input
-          className="input"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask anything about this dataset…"
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Analyzing…" : "Ask"}
-        </button>
-      </form>
+    <div className="fade-in">
+      {/* Ask Bar */}
+      <div className="ask-card glass">
+        <form
+          className="ask-bar"
+          onSubmit={e => {
+            e.preventDefault();
+            handleAsk();
+          }}
+        >
+          <input
+            className="input"
+            value={question}
+            onChange={e => setQuestion(e.target.value)}
+            placeholder="Ask anything about this dataset…"
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? "Analyzing…" : "Ask"}
+          </button>
+        </form>
+      </div>
 
       {error && <div className="error-banner">{error}</div>}
 
       {answer && (
         <div className="result-stack">
-        
-          <div className="sql-card">
-            <div className="sql-header">
-              <span className="badge">AI Generated SQL</span>
-              <button
-                className="copy-btn"
-                onClick={() => navigator.clipboard.writeText(answer.sql)}
-              >
-                Copy
-              </button>
-            </div>
+          {/* SQL */}
+          <div className="glass fade-in">
+            <strong>Generated SQL</strong>
             <pre className="sql-pre">{answer.sql}</pre>
           </div>
 
-          <div className="kpi-grid">
-            {answer.analysis?.rows !== undefined && (
-              <div className="kpi">
-                <div className="kpi-label">Rows</div>
-                <div className="kpi-value">{answer.analysis.rows}</div>
-              </div>
-            )}
-            {answer.analysis?.mean !== undefined && (
-              <div className="kpi">
-                <div className="kpi-label">Average</div>
-                <div className="kpi-value">
-                  {Math.round(answer.analysis.mean)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {answer.rows && answer.rows.length > 0 && (
-            <>
-              <ChartRenderer rows={answer.rows} />
-
-              <div className="table-wrap">
-                <table className="simple-table">
-                  <thead>
-                    <tr>
-                      {Object.keys(answer.rows[0]).map((c) => (
-                        <th key={c}>{c}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {answer.rows.slice(0, 50).map((row: any, i: number) => (
-                      <tr key={i}>
-                        {Object.keys(answer.rows[0]).map((c) => (
-                          <td key={c}>{String(row[c])}</td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
+          {/* SQL Explanation */}
+          {answer.explanation && (
+            <div className="info-banner glass fade-in">
+              <strong>What this query does</strong>
+              <p>{answer.explanation}</p>
+            </div>
           )}
+
+          {/* Insights */}
+          {answer.analysis && (
+            <div className="glass fade-in">
+              <h4 className="mb-3">Quick Insights</h4>
+              <div className="kpi-grid">
+                {answer.analysis.rows !== undefined && (
+                  <div className="kpi">
+                    <div className="kpi-label">Rows</div>
+                    <div className="kpi-value">
+                      {answer.analysis.rows}
+                    </div>
+                  </div>
+                )}
+                {answer.analysis.mean !== undefined && (
+                  <div className="kpi">
+                    <div className="kpi-label">Average</div>
+                    <div className="kpi-value">
+                      {Math.round(answer.analysis.mean)}
+                    </div>
+                  </div>
+                )}
+                {answer.analysis.max !== undefined && (
+                  <div className="kpi">
+                    <div className="kpi-label">Max</div>
+                    <div className="kpi-value">
+                      {Math.round(answer.analysis.max)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Chart */}
+          {answer.rows && answer.rows.length > 0 && (
+            <ChartRenderer rows={answer.rows} />
+          )}
+
+          {/* Follow-up Suggestions */}
+          <div className="glass fade-in">
+            <h4 className="mb-3">Try refining your question</h4>
+            <div className="chip-group">
+              {[
+                "Show last 6 months only",
+                "Group by category",
+                "Compare month over month",
+              ].map(s => (
+                <span
+                  key={s}
+                  className="chip"
+                  onClick={() => handleAsk(s)}
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

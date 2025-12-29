@@ -1,9 +1,8 @@
 "use client";
 
-import UploadDatasetForm from "@/components/UploadDatasetForm";
-import DatasetsList from "@/components/DatasetsList";
 import { Vortex } from "@/components/ui/vortex";
-
+import FaqSection from "@/components/FaqSection";
+import AnimatedTestimonials from "@/components/AnimatedTestimonials";
 export default function HomePage() {
   return (
     <>
@@ -12,7 +11,7 @@ export default function HomePage() {
   <div className="absolute inset-0 bg-linear-to-br from-violet-50 via-indigo-100 to-slate-100" />
 
 
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(15,23,42,0.08),transparent_60%)]" />
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(15,23,42,0.08),transparent_70%)]" />
 
   <Vortex
     className="absolute inset-0"
@@ -22,7 +21,7 @@ export default function HomePage() {
     baseHue={215} 
   />
 
-  <div className="relative z-10 mx-auto max-w-5xl h-[90vh] flex flex-col items-center justify-center text-center">
+  <div className="relative z-10 mx-auto max-w-5xl h-[67vh] flex flex-col items-center justify-center text-center">
    
     <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-1 text-sm font-medium text-white shadow">
       ⚡ AI-Powered Analytics
@@ -103,16 +102,9 @@ export default function HomePage() {
             <div className="cap-card">💰 Average order value</div>
           </div>
         </section>
+<AnimatedTestimonials />
 
-        <section className="grid fade-in">
-          <UploadDatasetForm />
-          <DatasetsList />
-        </section>
-
-        <section className="activity-feed fade-in">
-          <div>⚡ Dataset indexed · 2 minutes ago</div>
-          <div>🤖 Query executed · just now</div>
-        </section>
+      <FaqSection />
       </main>
     </>
   );

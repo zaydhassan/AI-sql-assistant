@@ -1,132 +1,83 @@
 "use client";
 
-import React from "react";
 import {
-  Bar,
+  ResponsiveContainer,
+  LineChart,
   Line,
-  Doughnut,
-} from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  ArcElement,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  ArcElement,
-  Tooltip,
-  Legend
-);
+} from "recharts";
 
 type Props = {
-  rows: any[];
+  rows: Record<string, any>[];
 };
 
 export default function ChartRenderer({ rows }: Props) {
+  // Safety checks
   if (!rows || rows.length === 0) return null;
 
   const columns = Object.keys(rows[0]);
+  if (columns.length < 2) return null;
 
-  if (rows.length === 1 && columns.length === 1) {
-    const value = rows[0][columns[0]];
+  // X-axis = first column
+  const xKey = columns[0];
 
-    return (
-      <div className="kpi-chart glass fade-in">
-        <div className="kpi-label">{columns[0]}</div>
-        <div className="kpi-big">
-          {Number(value).toLocaleString()}
-        </div>
-      </div>
-    );
-  }
+  // Y-axis = first numeric column
+  const yKey = columns.find(
+    key => typeof rows[0][key] === "number"
+  );
 
-  if (rows.length === 1 && columns.length > 1) {
-    return (
-      <div className="kpi-grid fade-in">
-        {columns.map((c) => (
-          <div key={c} className="kpi glass">
-            <div className="kpi-label">{c}</div>
-            <div className="kpi-value">
-              {Number(rows[0][c]).toLocaleString()}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  if (!yKey) return null;
 
-  const labelCol = columns[0];
-  const valueCol = columns[1];
-
-  const labels = rows.map((r) => String(r[labelCol]));
-  const values = rows.map((r) => Number(r[valueCol]));
-
-  const COLORS = [
-  "#8b5cf6", //purple
-  "#6366f1", // indigo
-  "#22c55e", // green
-  "#f59e0b", // amber
-  "#ef4444", // red
-  "#06b6d4", // cyan
-  "#ec4899", // pink
-];
-
-const data = {
-  labels,
-  datasets: [
-    {
-      label: valueCol,
-      data: values,
-      backgroundColor: labels.map(
-        (_, i) => COLORS[i % COLORS.length] + "cc"
-      ),
-      borderColor: labels.map(
-        (_, i) => COLORS[i % COLORS.length]
-      ),
-      borderWidth: 1,
-      tension: 0.35,
-    },
-  ],
-};
-
+  // Detect time-series (YYYY-MM or YYYY-MM-DD)
   const isTimeSeries =
-    labels[0]?.includes("-") || labels[0]?.includes("/");
+    typeof rows[0][xKey] === "string" &&
+    /\d{4}-\d{2}(-\d{2})?/.test(rows[0][xKey]);
+
+  // Decide chart label
+  const chartLabel = isTimeSeries
+    ? "Line Chart (Time Series)"
+    : rows.length <= 6
+    ? "Bar Chart (Category Comparison)"
+    : "Bar Chart (Aggregated Data)";
 
   return (
-    <div className="chart-container glass fade-in">
-      {isTimeSeries ? (
-        <Line data={data} />
-      ) : labels.length <= 6 ? (
-        <Doughnut
-  data={data}
-  options={{
-    maintainAspectRatio: false,
-    cutout: "55%",
-    plugins: {
-      legend: {
-        position: "top",
-        labels: {
-          color: "#c7c7d1",
-          boxWidth: 18,
-        },
-      },
-    },
-  }}
-/>
-      ) : (
-        <Bar data={data} />
-      )}
+    <div className="glass fade-in mt-6">
+      {/* Confidence Indicator */}
+      <div className="text-sm text-muted mb-3 text-center">
+        Auto-selected visualization: <strong>{chartLabel}</strong>
+      </div>
+
+      <ResponsiveContainer width="100%" height={320}>
+        {isTimeSeries ? (
+          <LineChart data={rows}>
+            <XAxis dataKey={xKey} />
+            <YAxis />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey={yKey}
+              stroke="#8b5cf6"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+            />
+          </LineChart>
+        ) : (
+          <BarChart data={rows}>
+            <XAxis dataKey={xKey} />
+            <YAxis />
+            <Tooltip />
+            <Bar
+              dataKey={yKey}
+              fill="#8b5cf6"
+              radius={[6, 6, 0, 0]}
+            />
+          </BarChart>
+        )}
+      </ResponsiveContainer>
     </div>
   );
 }

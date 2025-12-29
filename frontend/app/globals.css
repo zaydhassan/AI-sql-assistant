@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* ===============================
-   THEME TOKENS
-================================ */
 :root {
   --bg: #060714;
   --bg-soft: #0b0d2a;
@@ -56,9 +53,6 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* ===============================
-   BASE RESET
-================================ */
 * {
   box-sizing: border-box;
 }
@@ -81,9 +75,6 @@ a {
   text-decoration: none;
 }
 
-/* ===============================
-   TYPOGRAPHY
-================================ */
 h1 {
   font-size: 42px;
   font-weight: 700;
@@ -109,40 +100,32 @@ p {
   font-size: 14px;
 }
 
-/* ===============================
-   GLASS PANELS
-================================ */
 .glass {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.12),
-      rgba(255, 255, 255, 0.03)
-    );
-  border: 1px solid var(--border);
-  backdrop-filter: blur(16px);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid var(--border-soft);
   box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 20px 60px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: transform var(--speed-normal) var(--easing),
+              box-shadow var(--speed-normal) var(--easing);
 }
 
 .glass:hover {
-  border-color: var(--border-soft);
+  transform: translateY(-2px);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.7);
 }
 
-/* ===============================
-   GLOW EFFECTS
-================================ */
 .glow {
   box-shadow:
     0 0 0 1px var(--accent-glow-soft),
     0 0 60px var(--accent-glow);
 }
 
-/* ===============================
-   BUTTONS
-================================ */
 button {
   border: none;
   cursor: pointer;
@@ -158,9 +141,13 @@ button {
   font-size: 14px;
   letter-spacing: 0.2px;
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    opacity 0.15s ease;
+  transform var(--speed-fast) var(--easing),
+  box-shadow var(--speed-fast) var(--easing),
+  background var(--speed-fast) var(--easing);
+}
+
+button.primary {
+  box-shadow: 0 12px 35px var(--accent-glow);
 }
 
 button:hover {
@@ -181,9 +168,6 @@ button:disabled {
   box-shadow: none;
 }
 
-/* ===============================
-   INPUTS
-================================ */
 input[type="file"],
 input[type="text"] {
   width: 100%;
@@ -208,9 +192,6 @@ input:focus {
   box-shadow: 0 0 0 2px var(--accent-glow-soft);
 }
 
-/* ===============================
-   LAYOUT HELPERS
-================================ */
 .container {
   max-width: 1200px;
   margin: auto;
@@ -252,9 +233,6 @@ input:focus {
   color: var(--accent);
 }
 
-/* ===============================
-   ASK PANEL
-================================ */
 .ask-panel {
   margin-top: 32px;
 }
@@ -265,18 +243,12 @@ input:focus {
   align-items: center;
 }
 
-/* ===============================
-   RESULT STACK
-================================ */
 .result-stack {
   margin-top: 28px;
   display: grid;
   gap: 20px;
 }
 
-/* ===============================
-   SQL CARD
-================================ */
 .sql-card {
   background: linear-gradient(
     180deg,
@@ -326,9 +298,6 @@ input:focus {
   overflow-x: auto;
 }
 
-/* ===============================
-   KPI GRID
-================================ */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -354,9 +323,6 @@ input:focus {
   letter-spacing: -0.02em;
 }
 
-/* ===============================
-   INFO & ERROR BANNERS
-================================ */
 .info-banner {
   padding: 12px 14px;
   border-radius: var(--radius-md);
@@ -373,9 +339,6 @@ input:focus {
   border: 1px solid rgba(255, 80, 80, 0.3);
 }
 
-/* ===============================
-   TABLE STYLES
-================================ */
 .table-wrap {
   max-height: 380px;
   overflow: auto;
@@ -409,19 +372,18 @@ input:focus {
   background: rgba(139, 92, 246, 0.08);
 }
 
-/* ===============================
-   CHART CONTAINER
-================================ */
 .chart-container {
-  background: var(--panel);
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.03)
+  );
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 18px;
-  border: 1px solid var(--border-soft);
+  padding: 26px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
 }
 
-/* ===============================
-   MICRO INTERACTIONS
-================================ */
 .fade-in {
   animation: fadeIn 0.35s ease-out both;
 }
@@ -437,9 +399,6 @@ input:focus {
   }
 }
 
-/* ===============================
-   HERO
-================================ */
 .hero {
   max-width: 760px;
 }
@@ -448,9 +407,6 @@ input:focus {
   margin-top: 12px;
 }
 
-/* ===============================
-   EXAMPLE PROMPTS
-================================ */
 .example-prompts {
   margin-top: 20px;
   display: flex;
@@ -465,9 +421,6 @@ input:focus {
   font-size: 13px;
 }
 
-/* ===============================
-   UPLOAD BOX
-================================ */
 .upload-box {
   margin-top: 14px;
 }
@@ -478,9 +431,6 @@ input:focus {
   color: var(--muted);
 }
 
-/* ===============================
-   DATASET LIST
-================================ */
 .dataset-list {
   margin-top: 14px;
   display: grid;
@@ -504,10 +454,6 @@ input:focus {
   margin-left: 22px;
 }
 
-/* ===============================
-   DATASET PAGE
-================================ */
-
 .dataset-header {
   display: flex;
   justify-content: space-between;
@@ -528,10 +474,6 @@ input:focus {
   background: rgba(255,255,255,0.08);
 }
 
-/* ===============================
-   ASK SECTION
-================================ */
-
 .ask-section {
   margin-bottom: 28px;
 }
@@ -544,10 +486,6 @@ input:focus {
   display: flex;
   gap: 14px;
 }
-
-/* ===============================
-   SUGGESTIONS
-================================ */
 
 .suggestion-section {
   margin-top: 24px;
@@ -604,9 +542,6 @@ input:focus {
   margin: auto;
 }
 
-/* ===============================
-   HERO
-================================ */
 .hero {
   max-width: 820px;
 }
@@ -616,9 +551,6 @@ input:focus {
   max-width: 680px;
 }
 
-/* ===============================
-   CONFIDENCE BAR
-================================ */
 .confidence-bar {
   margin-top: 22px;
   display: flex;
@@ -627,9 +559,6 @@ input:focus {
   color: var(--muted);
 }
 
-/* ===============================
-   HOW IT WORKS
-================================ */
 .how-it-works {
   margin: 48px 0;
   display: grid;
@@ -655,9 +584,6 @@ input:focus {
   margin-bottom: 4px;
 }
 
-/* ===============================
-   CAPABILITIES
-================================ */
 .capabilities {
   margin-bottom: 40px;
 }
@@ -677,9 +603,6 @@ input:focus {
   font-size: 14px;
 }
 
-/* ===============================
-   ACTIVITY FEED
-================================ */
 .activity-feed {
   margin-top: 36px;
   font-size: 13px;
@@ -695,9 +618,6 @@ input:focus {
   }
 }
 
-/* ===============================
-   UPLOAD CARD
-================================ */
 .upload-card {
   padding: 28px;
   display: flex;
@@ -705,9 +625,6 @@ input:focus {
   gap: 14px;
 }
 
-/* ===============================
-   DROP ZONE
-================================ */
 .drop-zone {
   margin-top: 8px;
   padding: 22px;
@@ -735,17 +652,11 @@ input:focus {
   gap: 4px;
 }
 
-/* ===============================
-   UPLOAD BUTTON
-================================ */
 .upload-btn {
   margin-top: 6px;
   align-self: flex-start;
 }
 
-/* ===============================
-   AI HINT
-================================ */
 .upload-hint {
   margin-top: 4px;
   font-size: 12px;
@@ -827,44 +738,9 @@ input:focus {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* ===== NAVBAR ===== */
-.navbar {
-  font-family: "Times New Roman", Times, serif;
-  background: linear-gradient(180deg, #050816, #070817);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
 /* ===== LOGO ===== */
 .logo {
   color: white;
-}
-
-/* ===== NAV LINKS ===== */
-.nav-link {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.85);
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: white;
-}
-
-/* ===== SIGNUP BUTTON ===== */
-.signup-btn {
-  border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  padding: 0.5rem 1.25rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: white;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.signup-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.45);
 }
 
 .section {
@@ -906,4 +782,110 @@ input:focus {
 .card-saas p {
   margin-top: 0.5rem;
   color: rgba(255,255,255,0.75);
+}
+
+.info-banner {
+  background: rgba(139, 92, 246, 0.08);
+  border-left: 3px solid var(--accent);
+  padding: 14px;
+}
+
+.chip-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.15);
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+.feature-placeholder img {
+  max-width: 400px;
+}
+
+ul.text-muted {
+  list-style-type: none;
+  padding-left: 0;
+}
+ul.text-muted li::before {
+  content: "✔";
+  margin-right: 8px;
+  color: var(--accent);
+}
+
+.cta-section {
+  margin-top: 140px;
+  padding: 80px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.cta-card {
+  max-width: 720px;
+  width: 100%;
+  text-align: center;
+  padding: 64px 48px;
+  border-radius: 24px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.15),
+    rgba(139, 92, 246, 0.05)
+  );
+
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(139, 92, 246, 0.25);
+}
+
+.cta-title {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.cta-text {
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 14px 36px;
+  border-radius: 12px;
+
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+
+  background: linear-gradient(
+    135deg,
+    #8b5cf6,
+    #6366f1
+  );
+
+  box-shadow:
+    0 12px 30px rgba(139, 92, 246, 0.45);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 40px rgba(139, 92, 246, 0.65);
 }

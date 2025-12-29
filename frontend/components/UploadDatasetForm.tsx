@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { FileUpload } from "@/components/ui/file-upload";
 
 export default function UploadDatasetForm() {
   const [file, setFile] = useState<File | null>(null);
@@ -30,29 +31,22 @@ export default function UploadDatasetForm() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          body: formData, 
+          body: formData,
         }
       );
 
       if (!res.ok) {
         let errorMessage = "Upload failed";
-
         try {
           const err = await res.json();
           errorMessage = err.detail || errorMessage;
-          
-        } catch {
-          console.error("UPLOAD ERROR: No JSON body");
-        }
-
+        } catch {}
         throw new Error(errorMessage);
       }
 
       toast.success("Dataset uploaded successfully");
       setFile(null);
-
       window.dispatchEvent(new Event("dataset-updated"));
-
     } catch (err: any) {
       toast.error(err.message || "Upload failed");
     } finally {
@@ -64,35 +58,27 @@ export default function UploadDatasetForm() {
     <div className="glass upload-card">
       <h3>Upload CSV</h3>
       <p className="muted">
-        Drag & drop your CSV. AI will analyze the schema automatically.
+        Upload a CSV file. AI will analyze the schema automatically.
       </p>
 
-      <label className="drop-zone">
-        <input
-          type="file"
+      <div className="mt-6">
+        <FileUpload
           accept=".csv"
-          hidden
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          onChange={(files) => setFile(files?.[0] || null)}
         />
+      </div>
 
-        {!file ? (
-          <div className="drop-placeholder">
-            ⬆ Drop CSV here or click to browse
-          </div>
-        ) : (
-          <div className="file-preview">
-            <strong>{file.name}</strong>
-            <span className="muted">
-              {(file.size / 1024).toFixed(1)} KB
-            </span>
-          </div>
-        )}
-      </label>
+      {file && (
+        <div className="mt-3 text-sm muted">
+          <strong>{file.name}</strong> •{" "}
+          {(file.size / 1024).toFixed(1)} KB
+        </div>
+      )}
 
       <button
         onClick={upload}
         disabled={!file || loading}
-        className="upload-btn"
+        className="upload-btn mt-4"
       >
         {loading ? "Indexing dataset…" : "Upload Dataset"}
       </button>

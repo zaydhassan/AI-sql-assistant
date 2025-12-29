@@ -5,6 +5,8 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import GlassCard from "./GlassCard";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+
 type Dataset = {
   id: number;
   name: string;
@@ -60,7 +62,7 @@ export default function DatasetsList() {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/api/datasets/${id}`,
+        `${API_BASE}/api/datasets/${id}`,
         {
           method: "DELETE",
           headers: {

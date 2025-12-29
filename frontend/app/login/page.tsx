@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-
+import { saveToken } from "@/lib/auth";
 export default function LoginPage() {
   const router = useRouter();
 
@@ -12,34 +12,38 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    const form = new FormData();
-    form.append("email", email);
-    form.append("password", password);
+  const form = new FormData();
+  form.append("email", email);
+  form.append("password", password);
 
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+      {
         method: "POST",
         body: form,
-      });
-
-      if (!res.ok) {
-        throw new Error("Invalid credentials");
       }
+    );
 
-      const data = await res.json();
-      localStorage.setItem("token", data.access_token);
-
-      toast.success("Logged in successfully");
-      router.push("/");
-    } catch (err) {
-      toast.error("Login failed");
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      throw new Error("Invalid credentials");
     }
+
+    const data = await res.json();
+
+    saveToken(data.access_token);
+
+    toast.success("Logged in successfully");
+    router.push("/");
+  } catch (err) {
+    toast.error("Login failed");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#050816] px-4">

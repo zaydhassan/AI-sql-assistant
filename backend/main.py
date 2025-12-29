@@ -18,6 +18,7 @@ from auth import (
 )
 from db import get_db, engine
 from models import Dataset, Query, User
+from stripe_webhook import router as stripe_router
 from gemini_client import model
 import pandas as pd
 import numpy as np
@@ -27,6 +28,8 @@ from db import Base, engine
 import models
 
 app = FastAPI(title="AI SQL Assistant Backend")
+
+app.include_router(stripe_router)
 
 Base.metadata.create_all(bind=engine)
 
@@ -57,6 +60,14 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+@app.get("/me")
+def get_me(user: User = Depends(get_current_user)):
+    return {
+        "id": user.id,
+        "email": user.email,
+        "is_pro": user.is_pro,
+    }
 
 @app.post("/auth/register")
 def register(
@@ -142,6 +153,55 @@ async def upload_dataset(
         "id": dataset.id,
         "name": dataset.name,
         "table_name": dataset.table_name,
+    }
+
+@app.get("/api/datasets/{dataset_id}/queries")
+def get_query_history(
+    dataset_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    queries = (
+        db.query(Query)
+        .filter(
+            Query.dataset_id == dataset_id,
+            Query.user_id == user.id,
+        )
+        .order_by(Query.created_at.desc())
+        .all()
+    )
+
+    return [
+        {
+            "id": q.id,
+            "question": q.question,
+            "sql": q.sql,
+            "created_at": q.created_at.isoformat(),
+        }
+        for q in queries
+    ]
+    
+@app.post("/api/queries/{query_id}/replay")
+def replay_query(
+    query_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    q = (
+        db.query(Query)
+        .filter(Query.id == query_id, Query.user_id == user.id)
+        .first()
+    )
+
+    if not q:
+        raise HTTPException(status_code=404, detail="Query not found")
+
+    df = pd.read_sql_query(q.sql, engine)
+
+    return {
+        "query_id": q.id,
+        "sql": q.sql,
+        "rows": df.to_dict(orient="records"),
     }
 
 @app.get("/api/datasets")

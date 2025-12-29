@@ -4,100 +4,155 @@ import "../app/globals.css";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import FooterDemo from "@/components/spectrumui/footer-demo";
+
+import {
+  Navbar,
+  NavBody,
+  NavItems,
+  MobileNav,
+  NavbarButton,
+  MobileNavHeader,
+  MobileNavToggle,
+  MobileNavMenu,
+} from "@/components/ui/resizable-navbar";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("token"));
+    setIsLoggedIn(!!localStorage.getItem("access_token"));
   }, []);
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
     window.location.href = "/login";
   }
+
+  const navItems = [
+    { name: "Features", link: "/features" },
+    { name: "Playground", link: "/playground" },
+    { name: "Pricing", link: "/pricing" },
+  ];
 
   return (
     <html lang="en">
       <body>
-      
-        <nav className="navbar w-full">
-          <div className="relative h-16 w-full">
-            <div className="mx-auto flex h-full max-w-7xl items-center px-6">
-              {/* LOGO */}
-              <div className="flex items-center">
-                <Link href="/">
-  <span className="logo text-xl font-bold tracking-wide cursor-pointer">
-    AI SQL
-  </span>
-</Link>
-              </div>
+       
+        <Navbar className="fixed top-4 z-50">
+         
+          <NavBody>
+            <Link
+              href="/"
+              className="text-xl font-bold tracking-wide text-white"
+            >
+              AI SQL
+            </Link>
 
-              <div className="absolute left-1/2 hidden -translate-x-1/2 md:flex items-center gap-10">
-                <a href="/overview" className="nav-link">Overview</a>
-                <a href="/docs" className="nav-link">Docs</a>
-                <a href="/pricing" className="nav-link">Pricing</a>
-              </div>
+            <NavItems items={navItems} />
 
-              <div className="ml-auto hidden md:flex items-center gap-8">
+            <div className="flex items-center gap-4">
+              {!isLoggedIn ? (
+                <>
+                  <NavbarButton variant="secondary" as={Link} href="/login">
+                    Login
+                  </NavbarButton>
+                  <NavbarButton
+                as={Link}
+                href="/register"
+              className="rounded-full bg-blue-950 text-black px-5 py-2 text-sm font-semibold"
+                >
+            Sign up
+        </NavbarButton> 
+                </>
+              ) : (
+                <NavbarButton
+                  className="rounded-full bg-linear-to-r from-indigo-500 to-violet-600
+px-5 py-2 text-sm font-semibold text-white shadow-lg
+hover:brightness-110 transition"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </NavbarButton>
+              )}
+            </div>
+          </NavBody>
+
+          <MobileNav>
+            <MobileNavHeader>
+              <Link
+            href="/"
+          className="text-lg font-semibold tracking-wide text-white"
+            >
+            AI SQL
+            </Link>
+              <MobileNavToggle
+                isOpen={isMobileMenuOpen}
+                onClick={() =>
+                  setIsMobileMenuOpen(!isMobileMenuOpen)
+                }
+              />
+            </MobileNavHeader>
+
+            <MobileNavMenu
+              isOpen={isMobileMenuOpen}
+              onClose={() => setIsMobileMenuOpen(false)}
+            >
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.link}
+                  className="text-neutral-300 text-lg"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              <div className="mt-6 flex flex-col gap-3">
                 {!isLoggedIn ? (
                   <>
-                    <a href="/login" className="nav-link">Login</a>
-                    <a href="/register" className="signup-btn">Sign up</a>
+                    <NavbarButton
+                      variant="secondary"
+                      as={Link}
+                      href="/login"
+                      className="w-full"
+                    >
+                      Login
+                    </NavbarButton>
+                   <NavbarButton
+                as={Link}
+                href="/register"
+              className="w-full rounded-full bg-blue text-black font-semibold hover:bg-neutral-200"
+                >
+              Sign up
+                </NavbarButton>
+
                   </>
                 ) : (
-                  <button
+                  <NavbarButton
+                    variant="secondary"
                     onClick={handleLogout}
-                    className="nav-link text-red-400 hover:text-red-500"
+                    className="w-full"
                   >
                     Logout
-                  </button>
+                  </NavbarButton>
                 )}
               </div>
+            </MobileNavMenu>
+          </MobileNav>
+        </Navbar>
 
-              <button
-                className="ml-auto md:hidden text-white text-2xl"
-                onClick={() => setOpen(!open)}
-                aria-label="Toggle menu"
-              >
-                ☰
-              </button>
-            </div>
-          </div>
+        <main className="pt-24 min-h-screen">
+          {children}
+        </main>
 
-          {open && (
-            <div className="md:hidden border-t border-white/10 bg-[#050816] px-6 py-6">
-              <div className="flex flex-col gap-5">
-                <a href="/overview" className="nav-link">Overview</a>
-                <a href="/docs" className="nav-link">Docs</a>
-                <a href="/pricing" className="nav-link">Pricing</a>
-
-                <div className="mt-4 flex gap-4">
-                  {!isLoggedIn ? (
-                    <>
-                      <a href="/login" className="nav-link">Login</a>
-                      <a href="/register" className="signup-btn">Sign up</a>
-                    </>
-                  ) : (
-                    <button
-                      onClick={handleLogout}
-                      className="nav-link text-red-400"
-                    >
-                      Logout
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </nav>
-
-        <main>{children}</main>
-
+        <FooterDemo />
         <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
