@@ -1,4 +1,4 @@
-// token handling
+// TOKEN HANDLING
 export function saveToken(token: string) {
   localStorage.setItem("access_token", token);
 }

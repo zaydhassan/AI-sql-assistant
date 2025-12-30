@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import (
     FastAPI,
     UploadFile,
@@ -7,6 +10,7 @@ from fastapi import (
     HTTPException,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -26,8 +30,16 @@ import uuid
 import json
 from db import Base, engine
 import models
+import stripe
+import os
 
 app = FastAPI(title="AI SQL Assistant Backend")
+
+
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+STRIPE_PRO_PRICE_ID = os.getenv("STRIPE_PRO_PRICE_ID")
 
 app.include_router(stripe_router)
 
@@ -61,8 +73,33 @@ def get_current_user(
 
     return user
 
+@app.post("/stripe/checkout")
+def create_checkout(user: User = Depends(get_current_user)):
+    if not STRIPE_PRO_PRICE_ID or not FRONTEND_URL:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+
+    session = stripe.checkout.Session.create(
+        mode="subscription",
+        customer_email=user.email,
+        line_items=[{
+            "price": STRIPE_PRO_PRICE_ID,
+            "quantity": 1,
+        }],
+        success_url=f"{FRONTEND_URL}/pricing?success=true",
+        cancel_url=f"{FRONTEND_URL}/pricing?canceled=true",
+        metadata={
+            "user_id": str(user.id),  
+        },
+    )
+
+    return {"url": session.url}
+
 @app.get("/me")
-def get_me(user: User = Depends(get_current_user)):
+def get_me(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db.refresh(user)
     return {
         "id": user.id,
         "email": user.email,

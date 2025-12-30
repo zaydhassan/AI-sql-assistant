@@ -24,10 +24,14 @@ export default function RootLayout({
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   useEffect(() => {
+  const syncAuth = () =>
     setIsLoggedIn(!!localStorage.getItem("access_token"));
-  }, []);
+
+  syncAuth();
+  window.addEventListener("storage", syncAuth);
+  return () => window.removeEventListener("storage", syncAuth);
+}, []);
 
   function handleLogout() {
     localStorage.removeItem("access_token");
@@ -74,8 +78,8 @@ export default function RootLayout({
               ) : (
                 <NavbarButton
                   className="rounded-full bg-linear-to-r from-indigo-500 to-violet-600
-px-5 py-2 text-sm font-semibold text-white shadow-lg
-hover:brightness-110 transition"
+            px-5 py-2 text-sm font-semibold text-white shadow-lg
+            hover:brightness-110 transition"
                   onClick={handleLogout}
                 >
                   Logout
