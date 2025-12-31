@@ -15,3 +15,114 @@ https://sql-assistant-c410.onrender.com
 ![Dashboard](/dashboard.png)
 ![Playground](/playground.png)
 ![Query Interface](/query.png)
+
+---
+
+## ✨ Key Features
+
+- 🔐 JWT-based Authentication (Login / Register)
+- 🤖 Natural Language → SQL using AI
+- 📊 Query execution on PostgreSQL
+- 💳 Stripe subscription (Free & Pro plans)
+- 🔔 Stripe Webhooks for secure payment verification
+- 🧠 Role & subscription-based access control
+- ☁️ Cloud-deployed (Frontend + Backend + DB)
+- 🛠 Production-ready error handling & logging
+
+---
+
+## 🏗️ Tech Stack
+
+### Frontend
+- Next.js (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+
+### Backend
+- FastAPI (Python)
+- REST APIs
+- JWT Authentication
+- Stripe API & Webhooks
+
+### Database
+- PostgreSQL
+- SQLAlchemy ORM
+
+### Cloud & DevOps
+- Render (Frontend, Backend, PostgreSQL)
+- GitHub Actions (CI/CD)
+- Environment-based configuration
+
+---
+
+## 🧠 System Architecture
+
+Client (Next.js)
+|
+v
+FastAPI Backend
+|
+v
+PostgreSQL Database
+|
+v
+Stripe Webhooks (Subscription Updates)
+
+
+---
+
+## 🔐 Authentication Flow
+
+1. User registers or logs in
+2. Backend validates credentials
+3. JWT token is issued
+4. Token is attached to protected requests
+5. Backend enforces access control
+
+---
+
+## 💳 Stripe Subscription Flow
+
+1. User selects Pro plan
+2. Stripe Checkout session is created
+3. Payment is completed on Stripe
+4. Stripe sends webhook event
+5. Backend verifies event signature
+6. User account is upgraded to **Pro**
+
+> Webhooks ensure payments cannot be spoofed or faked.
+
+---
+
+## 🧪 Testing
+
+- Unit Testing (backend utilities)
+- Integration Testing (auth & API flows)
+- API testing via FastAPI TestClient
+- Ready for frontend tests using Jest / React Testing Library
+
+---
+
+## ⚙️ Local Development Setup
+
+### Prerequisites
+- Node.js (v18+)
+- Python (v3.10+)
+- PostgreSQL
+- Git
+
+---
+
+### 📥 Clone the Repository
+
+```bash
+git clone https://github.com/zaydhassan/sql-assistant.git
+cd sql-assistant
+
+🔧 Backend Setup
+
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
