@@ -149,10 +149,3 @@ Create .env.local:
 
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
-
-
-
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
