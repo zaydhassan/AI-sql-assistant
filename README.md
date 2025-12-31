@@ -126,3 +126,33 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+
+Create a .env file:
+
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+JWT_SECRET_KEY=your_secret_key
+STRIPE_SECRET_KEY=your_stripe_secret
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+FRONTEND_URL=http://localhost:3000
+
+Run backend:
+
+uvicorn main:app --reload
+
+🎨 Frontend Setup
+
+cd frontend
+npm install
+npm run dev
+
+Create .env.local:
+
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
+
+
+
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
