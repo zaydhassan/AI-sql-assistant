@@ -10,10 +10,11 @@ from fastapi import (
     HTTPException,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, func
 from auth import (
     hash_password,
     verify_password,
@@ -21,21 +22,24 @@ from auth import (
     decode_token,
 )
 from db import get_db, engine
-from models import Dataset, Query, User
+from models import Dataset, Query, Report, User
 from stripe_webhook import router as stripe_router
 from gemini_client import model
 import pandas as pd
-import numpy as np
 import uuid
 import json
 from db import Base, engine
-import models
 import stripe
 import os
+import time
+from datetime import datetime, timedelta
+from db import Base
 
 app = FastAPI(title="AI SQL Assistant Backend")
 
+os.makedirs("uploads/avatars", exist_ok=True)
 
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
@@ -328,29 +332,18 @@ async def ask_dataset(
 
     dataset = (
         db.query(Dataset)
-        .filter(
-            Dataset.id == dataset_id,
-            Dataset.user_id == user.id,
-        )
+        .filter(Dataset.id == dataset_id, Dataset.user_id == user.id)
         .first()
     )
-
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     table_name = dataset.table_name
 
-    
-    try:
-        sample_df = pd.read_sql_query(
-            f'SELECT * FROM "{table_name}" LIMIT 5',
-            engine,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to read sample data: {e}",
-        )
+    sample_df = pd.read_sql_query(
+        f'SELECT * FROM "{table_name}" LIMIT 5',
+        engine,
+    )
 
     schema_desc = ", ".join(
         f"{col} ({dtype})"
@@ -367,41 +360,20 @@ Columns:
 Rules:
 - Only SELECT queries
 - No DELETE, UPDATE, INSERT, DROP
-- Cast date strings using ::DATE
 - Use double quotes for identifiers
 
 User question: "{question}"
 """
 
-    gemini_resp = model.generate_content(prompt)
-
-    sql = (
-        gemini_resp.text
-        .replace("```sql", "")
-        .replace("```", "")
-        .strip()
-    )
+    sql = model.generate_content(prompt).text.replace("```sql", "").replace("```", "").strip()
 
     banned = ["delete ", "update ", "insert ", "drop ", "alter ", "truncate "]
     if any(b in sql.lower() for b in banned):
         raise HTTPException(status_code=400, detail="Unsafe SQL generated")
 
-    try:
-        df = pd.read_sql_query(sql, engine)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"SQL error: {e}")
-
-    analysis = {}
-    if not df.empty:
-        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        if numeric_cols:
-            col = numeric_cols[0]
-            analysis = {
-                "rows": int(len(df)),
-                "min": float(df[col].min()),
-                "max": float(df[col].max()),
-                "mean": float(df[col].mean()),
-            }
+    start = time.time()
+    df = pd.read_sql_query(sql, engine)
+    execution_time_ms = round((time.time() - start) * 1000, 2)
 
     q = Query(
         dataset_id=dataset.id,
@@ -409,6 +381,7 @@ User question: "{question}"
         question=question,
         sql=sql,
         result_json=json.loads(df.to_json(orient="records")),
+        execution_time_ms=execution_time_ms,
     )
 
     db.add(q)
@@ -419,5 +392,173 @@ User question: "{question}"
         "query_id": q.id,
         "sql": sql,
         "rows": q.result_json,
-        "analysis": analysis,
+        "execution_time_ms": execution_time_ms,
     }
+
+@app.get("/api/analytics/overview")
+def analytics_overview(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    total_queries = db.query(func.count(Query.id))\
+        .filter(Query.user_id == user.id).scalar()
+
+    failed_queries = db.query(func.count(Query.id))\
+        .filter(
+            Query.user_id == user.id,
+            Query.execution_time_ms.is_(None)
+        ).scalar()
+
+    avg_time = db.query(func.avg(Query.execution_time_ms))\
+        .filter(
+            Query.user_id == user.id,
+            Query.execution_time_ms.isnot(None)
+        ).scalar()
+
+    return {
+        "total_queries": total_queries or 0,
+        "failed_queries": failed_queries or 0,
+        "avg_execution_time": round(avg_time or 0, 2),
+    }
+
+
+@app.get("/api/analytics/query-volume")
+def query_volume(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    last_7_days = datetime.utcnow() - timedelta(days=6)
+
+    rows = (
+        db.query(
+            func.date(Query.created_at).label("day"),
+            func.count(Query.id).label("count"),
+        )
+        .filter(
+            Query.user_id == user.id,
+            Query.created_at >= last_7_days,
+        )
+        .group_by(func.date(Query.created_at))
+        .order_by(func.date(Query.created_at))
+        .all()
+    )
+
+    return [{"day": r.day.strftime("%a"), "queries": r.count} for r in rows]
+
+
+@app.get("/api/analytics/performance")
+def performance_distribution(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    buckets = {"<100ms": 0, "100–300ms": 0, ">300ms": 0}
+
+    times = db.query(Query.execution_time_ms)\
+        .filter(Query.user_id == user.id, Query.execution_time_ms.isnot(None))\
+        .all()
+
+    for (t,) in times:
+        if t < 100:
+            buckets["<100ms"] += 1
+        elif t <= 300:
+            buckets["100–300ms"] += 1
+        else:
+            buckets[">300ms"] += 1
+
+    return [{"bucket": k, "count": v} for k, v in buckets.items()]
+
+
+@app.get("/api/analytics/recent-queries")
+def recent_queries(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    queries = (
+        db.query(Query)
+        .filter(Query.user_id == user.id)
+        .order_by(Query.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    return [
+        {
+            "sql": q.sql,
+            "time": f"{q.execution_time_ms} ms" if q.execution_time_ms else "—",
+            "status": "Success" if q.execution_time_ms else "Failed",
+        }
+        for q in queries
+    ]
+    
+@app.post("/api/reports")
+def save_report(
+    payload: dict,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    report = Report(
+        user_id=user.id,
+        sql=payload["sql"],
+        execution_time_ms=payload.get("execution_time_ms"),
+        status=payload.get("status", "success"),
+    )
+
+    db.add(report)
+    db.commit()
+
+    return {"ok": True}
+
+@app.get("/api/profile")
+def get_profile(user: User = Depends(get_current_user)):
+    return {
+        "email": user.email,
+        "name": user.name,
+        "profile_image": user.profile_image,
+    }
+
+@app.put("/api/profile")
+def update_profile(
+    payload: dict,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user.name = payload.get("name", user.name)
+    user.profile_image = payload.get("profile_image", user.profile_image)
+
+    db.commit()
+    return {"success": True}
+
+@app.put("/api/profile/password")
+def change_password(
+    payload: dict,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(payload["current_password"], user.password_hash):
+        raise HTTPException(status_code=400, detail="Wrong password")
+
+    user.password_hash = hash_password(payload["new_password"])
+    db.commit()
+
+    return {"success": True}
+
+@app.post("/api/profile/avatar")
+def upload_avatar(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if file.content_type not in ["image/png", "image/jpeg", "image/jpg"]:
+        raise HTTPException(status_code=400, detail="Invalid image type")
+
+    ext = file.filename.split(".")[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    path = f"uploads/avatars/{filename}"
+
+    with open(path, "wb") as f:
+        f.write(file.file.read())
+
+    user.profile_image = f"/uploads/avatars/{filename}"
+    db.commit()
+
+    return {"profile_image": user.profile_image}
