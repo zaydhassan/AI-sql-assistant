@@ -6,7 +6,7 @@ It converts user prompts into optimized SQL queries using AI, executes them secu
 This project is built to demonstrate **real-world full-stack engineering**, including authentication, payments, database design, and cloud deployment.
 
 🌐 **Live Demo**  
-https://sql-assistant-c410.onrender.co
+https://sql-assistant-c410.onrender.com
 
 ---
 
