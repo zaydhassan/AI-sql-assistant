@@ -1,6 +1,5 @@
 # 🚀 AI SQL Assistant (SaaS)
 
-
 AI SQL Assistant is a **production-ready SaaS application** that allows users to query relational databases using **natural language**.  
 It converts user prompts into optimized SQL queries using AI, executes them securely, and returns meaningful results.
 
