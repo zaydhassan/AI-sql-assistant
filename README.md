@@ -10,6 +10,7 @@ https://sql-assistant-c410.onrender.com
 
 ---
 
+
 ## 📸 Screenshots
 
 ![Dashboard](/dashboard.png)
